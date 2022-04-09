@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum
     name: NounsDAOProxy
@@ -31,7 +31,7 @@ dataSources:
         - VotingPeriodSet
       abis:
         - name: NounsDAOProxy
-          file: ./abis/NounsDAOProxy.json
+          file: NounsDAOProxy/abis/NounsDAOProxy.json
       eventHandlers:
         - event: NewAdmin(address,address)
           handler: handleNewAdmin
@@ -63,4 +63,4 @@ dataSources:
           handler: handleVotingDelaySet
         - event: VotingPeriodSet(uint256,uint256)
           handler: handleVotingPeriodSet
-      file: ./src/mapping.ts
+      file: NounsDAOProxy/NounsDAOProxy.wasm

@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, Address, Bytes } from "@graphprotocol/graph-ts";
 import {
   NounsDAOProxy,
   NewAdmin,
@@ -15,53 +15,12 @@ import {
   QuorumVotesBPSSet,
   VoteCast,
   VotingDelaySet,
-  VotingPeriodSet
-} from "../generated/NounsDAOProxy/NounsDAOProxy"
-import { ExampleEntity } from "../generated/schema"
+  VotingPeriodSet,
+} from "../generated/NounsDAOProxy/NounsDAOProxy";
+import { Proposal } from "../generated/schema";
+import { addressToString } from "./utils";
 
-export function handleNewAdmin(event: NewAdmin): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
-  }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.oldAdmin = event.params.oldAdmin
-  entity.newAdmin = event.params.newAdmin
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.admin(...)
-  // - contract.implementation(...)
-  // - contract.pendingAdmin(...)
-}
+export function handleNewAdmin(event: NewAdmin): void {}
 
 export function handleNewImplementation(event: NewImplementation): void {}
 
@@ -69,27 +28,96 @@ export function handleNewPendingAdmin(event: NewPendingAdmin): void {}
 
 export function handleNewVetoer(event: NewVetoer): void {}
 
-export function handleProposalCanceled(event: ProposalCanceled): void {}
+export function handleProposalCanceled(event: ProposalCanceled): void {
+  let entity = Proposal.load(event.params.id.toString());
+
+  if (entity) {
+    entity.canceled = true;
+    entity.save();
+  }
+}
 
 export function handleProposalCreated(event: ProposalCreated): void {}
 
 export function handleProposalCreatedWithRequirements(
   event: ProposalCreatedWithRequirements
-): void {}
+): void {
+  let entity = new Proposal(event.params.id.toString());
 
-export function handleProposalExecuted(event: ProposalExecuted): void {}
+  // get bytes array
+  const targets = new Array<Bytes>();
+  for (let i = 0; i < event.params.targets.length; i++) {
+    targets.push(event.params.targets[i]);
+  }
 
-export function handleProposalQueued(event: ProposalQueued): void {}
+  entity.proposer = event.params.proposer;
+  entity.targets = targets;
+  entity.signatures = event.params.signatures;
+  entity.calldatas = event.params.calldatas;
+  entity.startBlock = event.params.startBlock;
+  entity.endBlock = event.params.endBlock;
+  entity.forVotes = BigInt.fromI32(0);
+  entity.againstVotes = BigInt.fromI32(0);
+  entity.abstainVotes = BigInt.fromI32(0);
+  entity.canceled = false;
+  entity.queued = false;
+  entity.executed = false;
+  entity.vetoed = false;
+  entity.proposalThreshold = event.params.proposalThreshold;
+  entity.quorumVotes = event.params.quorumVotes;
+  entity.description = event.params.description;
+  entity.save();
+}
+
+export function handleProposalExecuted(event: ProposalExecuted): void {
+  let entity = Proposal.load(event.params.id.toString());
+
+  if (entity) {
+    entity.executed = true;
+    entity.save();
+  }
+}
+
+export function handleProposalQueued(event: ProposalQueued): void {
+  let entity = Proposal.load(event.params.id.toString());
+
+  if (entity) {
+    entity.queued = true;
+    entity.save();
+  }
+}
 
 export function handleProposalThresholdBPSSet(
   event: ProposalThresholdBPSSet
 ): void {}
 
-export function handleProposalVetoed(event: ProposalVetoed): void {}
+export function handleProposalVetoed(event: ProposalVetoed): void {
+  let entity = Proposal.load(event.params.id.toString());
+
+  if (entity) {
+    entity.vetoed = true;
+    entity.save();
+  }
+}
 
 export function handleQuorumVotesBPSSet(event: QuorumVotesBPSSet): void {}
 
-export function handleVoteCast(event: VoteCast): void {}
+export function handleVoteCast(event: VoteCast): void {
+  let entity = Proposal.load(event.params.proposalId.toString());
+
+  if (entity) {
+    const support = event.params.support;
+    const votes = event.params.votes;
+    if (support == 0) {
+      entity.againstVotes = entity.againstVotes.plus(votes);
+    } else if (support == 1) {
+      entity.forVotes = entity.forVotes.plus(votes);
+    } else if (support == 2) {
+      entity.abstainVotes = entity.abstainVotes.plus(votes);
+    }
+    entity.save();
+  }
+}
 
 export function handleVotingDelaySet(event: VotingDelaySet): void {}
 
