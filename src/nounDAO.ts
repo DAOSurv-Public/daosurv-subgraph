@@ -18,7 +18,6 @@ import {
   VotingPeriodSet,
 } from "../generated/NounsDAOProxy/NounsDAOProxy";
 import { Proposal } from "../generated/schema";
-import { addressToString } from "./utils";
 
 export function handleNewAdmin(event: NewAdmin): void {}
 
@@ -42,7 +41,7 @@ export function handleProposalCreated(event: ProposalCreated): void {}
 export function handleProposalCreatedWithRequirements(
   event: ProposalCreatedWithRequirements
 ): void {
-  let entity = new Proposal(event.params.id.toString());
+  let entity = new Proposal("noun_" + event.params.id.toString());
 
   // get bytes array
   const targets = new Array<Bytes>();
@@ -50,6 +49,8 @@ export function handleProposalCreatedWithRequirements(
     targets.push(event.params.targets[i]);
   }
 
+  entity.governor = event.address;
+  entity.proposalId = event.params.id;
   entity.proposer = event.params.proposer;
   entity.targets = targets;
   entity.signatures = event.params.signatures;
@@ -63,8 +64,6 @@ export function handleProposalCreatedWithRequirements(
   entity.queued = false;
   entity.executed = false;
   entity.vetoed = false;
-  entity.proposalThreshold = event.params.proposalThreshold;
-  entity.quorumVotes = event.params.quorumVotes;
   entity.description = event.params.description;
   entity.save();
 }

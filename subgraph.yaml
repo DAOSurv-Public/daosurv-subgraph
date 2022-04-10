@@ -63,4 +63,52 @@ dataSources:
           handler: handleVotingDelaySet
         - event: VotingPeriodSet(uint256,uint256)
           handler: handleVotingPeriodSet
-      file: ./src/mapping.ts
+      file: ./src/nounDAO.ts
+
+  - kind: ethereum
+    name: AaveGovernorV2
+    network: mainnet
+    source:
+      address: "0xEC568fffba86c094cf06b22134B23074DFE2252c"
+      abi: AaveGovernorV2
+      startBlock: 11427398
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - ExecutorAuthorized
+        - ExecutorUnauthorized
+        - GovernanceStrategyChanged
+        - OwnershipTransferred
+        - ProposalCanceled
+        - ProposalCreated
+        - ProposalExecuted
+        - ProposalQueued
+        - VoteEmitted
+        - VotingDelayChanged
+      abis:
+        - name: AaveGovernorV2
+          file: ./abis/AaveGovernorV2.json
+      eventHandlers:
+        - event: ExecutorAuthorized(address)
+          handler: handleExecutorAuthorized
+        - event: ExecutorUnauthorized(address)
+          handler: handleExecutorUnauthorized
+        - event: GovernanceStrategyChanged(indexed address,indexed address)
+          handler: handleGovernanceStrategyChanged
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: ProposalCanceled(uint256)
+          handler: handleProposalCanceled
+        - event: ProposalCreated(uint256,indexed address,indexed address,address[],uint256[],string[],bytes[],bool[],uint256,uint256,address,bytes32)
+          handler: handleProposalCreated
+        - event: ProposalExecuted(uint256,indexed address)
+          handler: handleProposalExecuted
+        - event: ProposalQueued(uint256,uint256,indexed address)
+          handler: handleProposalQueued
+        - event: VoteEmitted(uint256,indexed address,bool,uint256)
+          handler: handleVoteEmitted
+        - event: VotingDelayChanged(uint256,indexed address)
+          handler: handleVotingDelayChanged
+      file: ./src/aaveGov.ts

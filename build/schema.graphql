@@ -1,5 +1,12 @@
+type Governor @entity {
+  id: ID!
+  address: Bytes!
+}
+
 type Proposal @entity {
   id: ID!
+  governor: Bytes!
+  proposalId: BigInt!
   proposer: Bytes!
   targets: [Bytes!]!
   values: [BigInt!]!
@@ -14,7 +21,7 @@ type Proposal @entity {
   queued: Boolean!
   executed: Boolean!
   vetoed: Boolean!
-  proposalThreshold: BigInt!
   quorumVotes: BigInt!
   description: String
+  ipfsHash: String
 }
